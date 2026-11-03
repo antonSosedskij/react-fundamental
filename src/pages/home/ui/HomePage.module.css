@@ -1,0 +1,16 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 48px 16px;
+}
+
+@media (max-width: 420px) {
+  .page {
+    gap: 16px;
+    padding: 24px 16px;
+  }
+}
