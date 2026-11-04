@@ -25,3 +25,10 @@ export type TimerAction =
   | { type: 'SKIP' }
   | { type: 'SWITCH_MODE'; mode: Mode }
   | { type: 'APPLY_SETTINGS'; settings: TimerSettings }
+
+export type ActionType = TimerAction['type']
+export type ActionOf<K extends ActionType> = Extract<TimerAction, { type: K }>
+
+export type TimerActionHandlers = {
+  [K in ActionType]: (state: TimerState, action: ActionOf<K>) => TimerState
+}

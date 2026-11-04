@@ -28,3 +28,4 @@ The owner is an experienced Angular developer learning React. Spec: `docs/MVP.md
 Update this list as tasks close.
 
 - Stage 1: function components, props typing via `ComponentPropsWithoutRef`, destructuring with defaults, `...rest` spread and attribute order, `children`, named exports, CSS Modules, list rendering with `map` and `key` (incl. what duplicate keys break), callback props instead of `@Output`, arrow vs direct call in `onClick`, boolean ARIA attributes in JSX, basic `useState` (a plain variable does not trigger a re-render).
+- Stage 2: `useReducer` and `dispatch` (component reports events, the reducer holds the rules), reducer purity (`now` in the action), immutable updates, bail-out by returning the same reference, lazy init via the third argument, state as a per-render snapshot (hook storage vs closures), render vs commit (re-render is not a DOM update) and what triggers a re-render.

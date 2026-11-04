@@ -11,6 +11,7 @@ export function ModeSwitcher({ mode, onChange }: ModeSwitcherProps) {
     <div className={styles.switcher} role="group" aria-label="Режим таймера">
       {MODES.map((m) => (
         <button
+          type="button"
           onClick={() => onChange(m)}
           className={styles.tab}
           aria-pressed={m === mode}

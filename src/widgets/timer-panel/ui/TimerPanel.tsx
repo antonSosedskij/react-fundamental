@@ -1,27 +1,59 @@
-import { TimerDisplay, type Mode } from '@/entities/timer'
+import { createInitialTimerState, TimerDisplay, timerReducer, type Mode } from '@/entities/timer'
 import { ModeSwitcher } from '@/features/mode-switcher'
 import { TimerControls } from '@/features/timer-controls'
 import styles from './TimerPanel.module.css'
-import { useState } from 'react'
-
-const noop = () => {
-  console.log('onChange')
-}
+import { useReducer } from 'react'
+import { DEFAULT_SETTINGS } from '@/entities/settings'
 
 export function TimerPanel() {
-  const [mode, setMode] = useState<Mode>('focus')
+  const [state, dispatch] = useReducer(timerReducer, DEFAULT_SETTINGS, createInitialTimerState)
+
+  const handleStart = () => {
+    dispatch({
+      type: 'START',
+      now: Date.now(),
+    })
+  }
+
+  const handlePause = () => {
+    dispatch({
+      type: 'PAUSE',
+      now: Date.now(),
+    })
+  }
+
+  const handleReset = () => {
+    dispatch({
+      type: 'RESET',
+    })
+  }
+
+  const handleSkip = () => {
+    dispatch({
+      type: 'SKIP',
+    })
+  }
 
   const onModeChange = (mode: Mode) => {
-    setMode(mode)
+    dispatch({
+      type: 'SWITCH_MODE',
+      mode,
+    })
   }
 
   return (
     <section className={styles.panel} aria-label="Таймер">
-      <ModeSwitcher mode={mode} onChange={onModeChange} />
+      <ModeSwitcher mode={state.mode} onChange={onModeChange} />
 
-      <TimerDisplay time="25:00" mode={mode} pomodoroNumber={1} progress={0.35} />
+      <TimerDisplay time="25:00" mode={state.mode} pomodoroNumber={1} progress={0.35} />
 
-      <TimerControls status="idle" onStart={noop} onPause={noop} onReset={noop} onSkip={noop} />
+      <TimerControls
+        status={state.status}
+        onStart={handleStart}
+        onPause={handlePause}
+        onReset={handleReset}
+        onSkip={handleSkip}
+      />
     </section>
   )
 }
