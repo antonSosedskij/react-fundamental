@@ -1,5 +1,6 @@
 import {
   createInitialTimerState,
+  getModeDurationMs,
   getPomodoroNumber,
   getProgress,
   getRemainingMs,
@@ -16,6 +17,7 @@ import { useSettings, type Settings } from '@/entities/settings'
 import { formatDuration, useDocumentTitle, useNow } from '@/shared/lib'
 import { completeSoundUrl } from '@/shared/assets'
 import { SettingsForm } from '@/features/settings-form'
+import { useSessions } from '@/entities/session'
 
 /** Module-level, so it is not a new function every render and not an effect dependency. */
 function playSound(audio: HTMLAudioElement | null) {
@@ -28,6 +30,7 @@ function playSound(audio: HTMLAudioElement | null) {
 
 export function TimerPanel() {
   const { settings, updateSettings } = useSettings()
+  const { addSession } = useSessions()
 
   const [state, dispatch] = useReducer(timerReducer, settings, createInitialTimerState)
   const now = useNow(state.status === 'running')
@@ -52,9 +55,15 @@ export function TimerPanel() {
       playSound(audioRef.current)
     }
 
+    // Recorded here, next to COMPLETE, from the state before the transition.
+    // Skipped intervals never reach this code, so they are never recorded.
+    if (mode === 'focus') {
+      addSession({ endedAt: endsAt, durationMs: getModeDurationMs(mode, state.settings) })
+    }
+
     // endsAt, not Date.now(): the tick notices zero late, and a sleeping tab even later.
     dispatch({ type: 'COMPLETE', now: endsAt })
-  }, [isFinished, endsAt, settings.soundEnabled])
+  }, [isFinished, endsAt, mode, state.settings, settings.soundEnabled, addSession])
 
   const onSettingsSave = (settings: Settings) => {
     updateSettings(settings)

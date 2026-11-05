@@ -1,4 +1,4 @@
-import { createContext } from 'react'
+import { createContext, useContext } from 'react'
 import type { Session } from './types'
 
 export interface SessionsContextValue {
@@ -9,7 +9,13 @@ export interface SessionsContextValue {
 /** Shared by timer-panel (writes) and stats-panel (reads). Provider lives in app/providers. */
 export const SessionsContext = createContext<SessionsContextValue | null>(null)
 
-/** Throws if used outside SessionsProvider. Stage 7. */
+/** Throws if used outside SessionsProvider. */
 export function useSessions(): SessionsContextValue {
-  throw new Error('Not implemented')
+  const context = useContext(SessionsContext)
+
+  if (!context) {
+    throw new Error('useSessions must be used inside SessionsProvider')
+  }
+
+  return context
 }
