@@ -11,13 +11,24 @@ import {
 import { ModeSwitcher } from '@/features/mode-switcher'
 import { TimerControls } from '@/features/timer-controls'
 import styles from './TimerPanel.module.css'
-import { useEffect, useReducer } from 'react'
+import { useEffect, useReducer, useRef } from 'react'
 import { DEFAULT_SETTINGS } from '@/entities/settings'
 import { formatDuration, useDocumentTitle, useNow } from '@/shared/lib'
+import { completeSoundUrl } from '@/shared/assets'
+
+/** Module-level, so it is not a new function every render and not an effect dependency. */
+function playSound(audio: HTMLAudioElement | null) {
+  if (!audio) return
+
+  audio.currentTime = 0
+  // The browser may refuse playback (autoplay policy); the timer must keep working anyway.
+  audio.play().catch(() => {})
+}
 
 export function TimerPanel() {
   const [state, dispatch] = useReducer(timerReducer, DEFAULT_SETTINGS, createInitialTimerState)
   const now = useNow(state.status === 'running')
+  const audioRef = useRef<HTMLAudioElement>(null)
 
   const remainingMs = getRemainingMs(state, now)
   const time = formatDuration(remainingMs)
@@ -25,17 +36,22 @@ export function TimerPanel() {
   const pomodoroNumber = getPomodoroNumber(state)
 
   const { endsAt, status, mode } = state
+  const isFinished = status === 'running' && remainingMs === 0
 
   useDocumentTitle(`${time} · ${MODE_LABELS[mode]}`)
 
+  // Time ran out: signal it and let the reducer move to the next mode.
+  // Re-runs only when isFinished flips, not on every tick.
   useEffect(() => {
-    if (status === 'running' && !remainingMs && endsAt !== null) {
-      dispatch({
-        type: 'COMPLETE',
-        now: endsAt,
-      })
+    if (!isFinished || endsAt === null) return
+
+    if (DEFAULT_SETTINGS.soundEnabled) {
+      playSound(audioRef.current)
     }
-  }, [status, endsAt, remainingMs])
+
+    // endsAt, not Date.now(): the tick notices zero late, and a sleeping tab even later.
+    dispatch({ type: 'COMPLETE', now: endsAt })
+  }, [isFinished, endsAt])
 
   const handleStart = () => {
     dispatch({
@@ -88,6 +104,8 @@ export function TimerPanel() {
         onReset={handleReset}
         onSkip={handleSkip}
       />
+
+      <audio ref={audioRef} src={completeSoundUrl} />
     </section>
   )
 }
