@@ -1,6 +1,9 @@
+import { DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY, SettingsContext } from '@/entities/settings'
+import { useLocalStorage } from '@/shared/lib'
 import type { PropsWithChildren } from 'react'
 
-/** Stage 6: SettingsContext.Provider + useLocalStorage. For now it only passes children through. */
 export function SettingsProvider({ children }: PropsWithChildren) {
-  return children
+  const [settings, updateSettings] = useLocalStorage(SETTINGS_STORAGE_KEY, DEFAULT_SETTINGS)
+
+  return <SettingsContext value={{ settings, updateSettings }}>{children}</SettingsContext>
 }

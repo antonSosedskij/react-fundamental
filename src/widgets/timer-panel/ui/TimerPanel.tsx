@@ -12,9 +12,10 @@ import { ModeSwitcher } from '@/features/mode-switcher'
 import { TimerControls } from '@/features/timer-controls'
 import styles from './TimerPanel.module.css'
 import { useEffect, useReducer, useRef } from 'react'
-import { DEFAULT_SETTINGS } from '@/entities/settings'
+import { useSettings, type Settings } from '@/entities/settings'
 import { formatDuration, useDocumentTitle, useNow } from '@/shared/lib'
 import { completeSoundUrl } from '@/shared/assets'
+import { SettingsForm } from '@/features/settings-form'
 
 /** Module-level, so it is not a new function every render and not an effect dependency. */
 function playSound(audio: HTMLAudioElement | null) {
@@ -26,7 +27,9 @@ function playSound(audio: HTMLAudioElement | null) {
 }
 
 export function TimerPanel() {
-  const [state, dispatch] = useReducer(timerReducer, DEFAULT_SETTINGS, createInitialTimerState)
+  const { settings, updateSettings } = useSettings()
+
+  const [state, dispatch] = useReducer(timerReducer, settings, createInitialTimerState)
   const now = useNow(state.status === 'running')
   const audioRef = useRef<HTMLAudioElement>(null)
 
@@ -45,13 +48,21 @@ export function TimerPanel() {
   useEffect(() => {
     if (!isFinished || endsAt === null) return
 
-    if (DEFAULT_SETTINGS.soundEnabled) {
+    if (settings.soundEnabled) {
       playSound(audioRef.current)
     }
 
     // endsAt, not Date.now(): the tick notices zero late, and a sleeping tab even later.
     dispatch({ type: 'COMPLETE', now: endsAt })
-  }, [isFinished, endsAt])
+  }, [isFinished, endsAt, settings.soundEnabled])
+
+  const onSettingsSave = (settings: Settings) => {
+    updateSettings(settings)
+    dispatch({
+      type: 'APPLY_SETTINGS',
+      settings,
+    })
+  }
 
   const handleStart = () => {
     dispatch({
@@ -96,7 +107,6 @@ export function TimerPanel() {
         pomodoroNumber={pomodoroNumber}
         progress={progress}
       />
-
       <TimerControls
         status={state.status}
         onStart={handleStart}
@@ -104,6 +114,11 @@ export function TimerPanel() {
         onReset={handleReset}
         onSkip={handleSkip}
       />
+
+      <details className={styles.settings}>
+        <summary className={styles.settingsSummary}>Настройки</summary>
+        <SettingsForm key={JSON.stringify(settings)} onSave={onSettingsSave} />
+      </details>
 
       <audio ref={audioRef} src={completeSoundUrl} />
     </section>

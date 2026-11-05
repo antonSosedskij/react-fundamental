@@ -1,4 +1,4 @@
-import { createContext } from 'react'
+import { createContext, useContext } from 'react'
 import type { Settings } from './types'
 
 export interface SettingsContextValue {
@@ -11,5 +11,11 @@ export const SettingsContext = createContext<SettingsContextValue | null>(null)
 
 /** Throws if used outside SettingsProvider. Stage 6. */
 export function useSettings(): SettingsContextValue {
-  throw new Error('Not implemented')
+  const settings = useContext(SettingsContext)
+
+  if (!settings) {
+    throw new Error('Attemped access to context outside provider')
+  }
+
+  return settings
 }
