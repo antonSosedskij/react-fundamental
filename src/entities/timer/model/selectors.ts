@@ -28,10 +28,15 @@ export function getNextMode(state: TimerState, reason: 'complete' | 'skip'): Mod
   return isLongBreakDue ? 'longBreak' : 'shortBreak'
 }
 
-/** Time left: endsAt - now while running (never below 0), otherwise remainingMs. */
+/**
+ * Time left: endsAt - now while running (never below 0), otherwise remainingMs.
+ * While running, remainingMs still holds the value at START, so the result is capped
+ * by it: a `now` older than the start (e.g. from a clock hook that was paused) cannot
+ * show more time than the interval had.
+ */
 export function getRemainingMs(state: TimerState, now: number): number {
   if (state.status === 'running' && state.endsAt !== null) {
-    return Math.max(0, state.endsAt - now)
+    return Math.max(0, Math.min(state.remainingMs, state.endsAt - now))
   }
   return state.remainingMs
 }

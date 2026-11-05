@@ -1,12 +1,34 @@
-import { createInitialTimerState, TimerDisplay, timerReducer, type Mode } from '@/entities/timer'
+import {
+  createInitialTimerState,
+  getRemainingMs,
+  TimerDisplay,
+  timerReducer,
+  type Mode,
+} from '@/entities/timer'
 import { ModeSwitcher } from '@/features/mode-switcher'
 import { TimerControls } from '@/features/timer-controls'
 import styles from './TimerPanel.module.css'
-import { useReducer } from 'react'
+import { useEffect, useReducer } from 'react'
 import { DEFAULT_SETTINGS } from '@/entities/settings'
+import { formatDuration, useNow } from '@/shared/lib'
 
 export function TimerPanel() {
   const [state, dispatch] = useReducer(timerReducer, DEFAULT_SETTINGS, createInitialTimerState)
+  const now = useNow(state.status === 'running')
+
+  const remainingMs = getRemainingMs(state, now)
+  const time = formatDuration(remainingMs)
+
+  const { endsAt, status } = state
+
+  useEffect(() => {
+    if (status === 'running' && !remainingMs && endsAt !== null) {
+      dispatch({
+        type: 'COMPLETE',
+        now: endsAt,
+      })
+    }
+  }, [status, endsAt, remainingMs])
 
   const handleStart = () => {
     dispatch({
@@ -45,7 +67,7 @@ export function TimerPanel() {
     <section className={styles.panel} aria-label="Таймер">
       <ModeSwitcher mode={state.mode} onChange={onModeChange} />
 
-      <TimerDisplay time="25:00" mode={state.mode} pomodoroNumber={1} progress={0.35} />
+      <TimerDisplay time={time} mode={state.mode} pomodoroNumber={1} progress={0.35} />
 
       <TimerControls
         status={state.status}
