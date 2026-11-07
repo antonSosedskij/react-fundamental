@@ -18,6 +18,7 @@ import { formatDuration, useDocumentTitle, useNow } from '@/shared/lib'
 import { completeSoundUrl } from '@/shared/assets'
 import { SettingsForm } from '@/features/settings-form'
 import { useSessions } from '@/entities/session'
+import { useTimerHotkeys } from '@/features/hotkeys'
 
 /** Module-level, so it is not a new function every render and not an effect dependency. */
 function playSound(audio: HTMLAudioElement | null) {
@@ -105,6 +106,13 @@ export function TimerPanel() {
       mode,
     })
   }
+
+  const onToggle = () => {
+    if (status === 'running') handlePause()
+    else handleStart()
+  }
+
+  useTimerHotkeys({ onToggle, onReset: handleReset, onSkip: handleSkip })
 
   return (
     <section className={styles.panel} aria-label="Таймер">
